@@ -84,8 +84,8 @@ def executeMorpho(img, difference):
 
 ####---------------------------------------------------------------------------###
 
-path = "/home/vmalarcon/proyectos/PR-00680_HIBA/dataset/Images/Almendro_RGB.tif"
-#path = "/home/vmalarcon/proyectos/PR-00680_HIBA/dataset/Images/Puente_Genil_Olivar_Tradicional.tif"
+# path = "/home/vmalarcon/proyectos/PR-00680_HIBA/dataset/Images/Almendro_RGB.tif"
+path = "/home/vmalarcon/proyectos/PR-00680_HIBA/dataset/Images/Puente_Genil_Olivar_Tradicional.tif"
 
 original = cv.imread(path) 
 height = original.shape[0]
@@ -97,40 +97,27 @@ print("Original height: {} , Original width: {}".format(height, width))
 scale_percent = 10
 difference_percent = round(100/scale_percent)
 escalada_percent = resizeTiff(original, scale_percent)
-points_escalado = []
-
+points_escalado =  [[222  , 322], [635 ,  803], [949 ,  614], [986 ,  531], [983 ,  120], [691 ,  58], [459,   181], [383,   178], [256,   210]] #[]
+'''
 cv.imshow('Imagen escalada', escalada_percent)
 cv.setMouseCallback('Imagen escalada', click_event)
 cv.waitKey(0)
 cv.destroyAllWindows()
-
+'''
 roi_percent = selectROI(escalada_percent, points_escalado)
 morpho_percent = executeMorpho(roi_percent, 0)
-
-cv.imshow("image", morpho_percent)
-cv.waitKey(0)
-
 contours, hierarchy1 = cv.findContours(morpho_percent, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 drawCont1 = cv.drawContours(roi_percent, contours, -1, (0, 0, 255), 2)
-
-print("PERCENT - Number: ", len(contours))
+#cv.imshow('DRAW CONT',drawCont1)
+#cv.waitKey(0)
+#print("PERCENT - Number: ", len(contours))
 
 ############## ORIGINAL
 points_original = [(x*difference_percent,y*difference_percent) for (x,y) in points_escalado]
 roi_original = selectROI(original, points_original)
 morpho_original = executeMorpho(roi_original, difference_percent)
-
-cv.imshow("image", morpho_original)
-cv.waitKey(0)
-
-cv.imshow('DRAW CONT',drawCont1)
-cv.waitKey(0)
-
 contours3, hierarchy3 = cv.findContours(morpho_original, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 drawCont3 = cv.drawContours(roi_original, contours3, -1, (0, 0, 255), 2)
-cv.imshow('DRAW CONT',drawCont3)
-cv.waitKey(0)
-
 print("ORIGINAL - Number: ", len(contours3))
 
 ############## GSD
@@ -145,19 +132,11 @@ for gsd_ in gsd_list :
     roi_gsd = selectROI(escalada_gsd, points_gsd)
     morpho_gsd = executeMorpho(roi_gsd, 0)
 
-    cv.imshow('roi gsd', roi_gsd)
-    cv.waitKey(0)
-    cv.destroyAllWindows()   
-
-    cv.imshow("image", morpho_gsd)
-    cv.waitKey(0)
-
     contours2, hierarchy2 = cv.findContours(morpho_gsd, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
     drawCont2 = cv.drawContours(roi_gsd, contours2, -1, (0, 0, 255), 2)
+    print("GSD: " , gsd_, " - Number: ", len(contours2))
     cv.imshow('DRAW CONT',drawCont2)
     cv.waitKey(0)
-
-    print("GSD: " , gsd_, " - Number: ", len(contours2))
 
 ############## RESULTADOS
 

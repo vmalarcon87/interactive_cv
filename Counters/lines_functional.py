@@ -106,7 +106,7 @@ def draw_line(roi):
     global counter 
     counter = 0
     roy_copy = roi.copy()
-    
+    '''
     while counter<=2:
         for x in range (0,2):
             cv.circle(roi,(point_matrix[x][0],point_matrix[x][1]),1,(0,255,0),cv.FILLED)
@@ -118,13 +118,16 @@ def draw_line(roi):
             ending_y = point_matrix[1][1]
             #cv.rectangle(roy_copy, (starting_x, starting_y), (ending_x, ending_y), (0, 255, 0), 1)
             cv.line(roy_copy, (starting_x, starting_y), (ending_x, ending_y), (0, 255, 0), thickness=1)
+            print(starting_x, starting_y, ending_x, ending_y)
             break
         
         cv.imshow("Dibuja la Linea", roi)
         cv.setMouseCallback("Dibuja la Linea", mousePoints)
         cv.waitKey(1)
-    
-    return [starting_x, starting_y, ending_x, ending_y]
+    '''
+    #return [4,    551 ,    458 ,    551]
+    return [10 ,102 ,1034 ,72]
+    #return [starting_x, starting_y, ending_x, ending_y]
 
 
 def calcule_lines(roi, pnts, difference, scale_value):     
@@ -152,6 +155,7 @@ def calcule_lines(roi, pnts, difference, scale_value):
     #show_wait_destroy("binary", bw)
    
     # Create the images that will use to extract the horizontal and vertical lines
+    '''
     horizontal = np.copy(gray)
     cols = horizontal.shape[1]
     horizontal_size = cols // 30    
@@ -160,59 +164,57 @@ def calcule_lines(roi, pnts, difference, scale_value):
     horizontal = cv.dilate(horizontal, horizontalStructure)
     # Show extracted horizontal lines
     show_wait_destroy("horizontal", horizontal)
-    
-    
+    '''
     vertical = np.copy(gray)
     rows = vertical.shape[0]
-    verticalsize = rows // 30
-    
+    verticalsize = rows // 100
+
+    kernel_r = 2*difference
+    kernel_c = 2*difference
+
+    kernel = np.ones((kernel_r, kernel_c),np.uint8)
+    vertical = cv.dilate(green, kernel)
+    vertical = cv.erode(vertical, kernel)
+    '''
     # Create structure element for extracting vertical lines through morphology operations
     verticalStructure = cv.getStructuringElement(cv.MORPH_RECT, (1, verticalsize))
     # Apply morphology operations
     vertical = cv.erode(vertical, verticalStructure)
     vertical = cv.dilate(vertical, verticalStructure)
-    
+    '''
     # Show extracted vertical lines
-    #show_wait_destroy("vertical", vertical)
+    show_wait_destroy("vertical", vertical)
 
     # Inverse vertical image
-    vertical = cv.bitwise_not(vertical)
-    show_wait_destroy("vertical_bit", vertical)
+    #vertical = cv.bitwise_not(vertical)
+    #show_wait_destroy("vertical_bit", vertical)
     
-    for (x,y) in c :
-        if vertical[y,x].any() > 0:
-            #morpho[y,x] = (0, 0, 255)
-            if "b" in last : red+=1
-            last="r"
-        else:
-            #morpho[y,x] = (255, 0, 0)
-            if "r" in last : blue+=1
-            last="b"  
-    
+    try:
+        for (x,y) in c :
+            if vertical[y,x].any() > 0:
+                #morpho[y,x] = (0, 0, 255)
+                if "b" in last : red+=1
+                last="r"
+            else:
+                #morpho[y,x] = (255, 0, 0)
+                if "r" in last : blue+=1
+                last="b"  
+    except:
+        pass
+
     print("PRE-MORPH " + str(scale_value) + " - WHITE: " + str(red))
-
-   
-    kernel_r = 2*difference
-    kernel_c = 2*difference
-
-    kernel = np.ones((kernel_r, kernel_c),np.uint8)
-    morpho = cv.dilate(green, kernel)
-    morpho = cv.erode(morpho, kernel)
-    
 
     #cv.imshow("RESULTS", morpho)
     #cv.waitKey(0)
     #cv.destroyAllWindows()
 
-
-
-    return morpho
+    return vertical
  
 ####---------------------------------------------------------------------------###
 
-#path = "/home/vmalarcon/proyectos/PR-00680_HIBA/dataset/Images/20211029_olivar_RGB_mask.tif"
+path = "/home/vmalarcon/proyectos/PR-00680_HIBA/dataset/Images/20211029_olivar_RGB_mask.tif"
 #path = "/home/vmalarcon/proyectos/PR-00680_HIBA/dataset/Images/Olivar_Super_intensivo.tif"
-path = "/home/vmalarcon/proyectos/PR-00680_HIBA/dataset/Images/Vinha_espaldera_2.tif"
+#path = "/home/vmalarcon/proyectos/PR-00680_HIBA/dataset/Images/Vinha_espaldera_2.tif"
 
 original = cv.imread(path) 
 height = original.shape[0]
@@ -221,20 +223,24 @@ print("Original height: {} , Original width: {}".format(height, width))
 
 
 ############## ESCALA PORCENTAJE
-scale_percent = 10
+scale_percent = 5
 difference_percent = round(100/scale_percent)
 escalada_percent = resizeTiff(original, scale_percent)
-points_escalado = []
+#points_escalado = [[77  , 137],[4   ,378],[0   ,977],[433   ,989],[465  , 144]]#[]
+points_escalado = [[280 ,  597],[320   ,573],[1262   ,581],[1261   ,691],[225   ,687]]#[]
+#points_escalado = []
 
+'''
 cv.imshow('Imagen escalada', escalada_percent)
 cv.setMouseCallback('Imagen escalada', click_event)
 cv.waitKey(0)
 cv.destroyAllWindows()
+'''
 
 roi_percent = selectROI(escalada_percent, points_escalado)
 
 pnts_line_escalado = draw_line(roi_percent)
-morpho_escalado = calcule_lines(roi_percent, pnts_line_escalado, 1, 10)
+#morpho_escalado = calcule_lines(roi_percent, pnts_line_escalado, 1, 10)
 
 
 ############## ORIGINAL
