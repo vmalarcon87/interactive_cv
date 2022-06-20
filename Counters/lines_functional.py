@@ -3,6 +3,12 @@ import numpy as np
 import rasterio
 from skimage.draw import line
  
+####---------------------------------------------------------------------------###
+def show_wait_destroy(winname, img):
+    cv.imshow(winname, img)
+    cv.moveWindow(winname, 500, 0)
+    cv.waitKey(0)
+    cv.destroyWindow(winname)
 
 ####---------------------------------------------------------------------------###
 
@@ -134,16 +140,47 @@ def calcule_lines(roi, pnts, difference, scale_value):
     lower = np.array([86, 255, 255])      
     green = cv.inRange(green, upper, lower)
 
-    kernel_r = 2*difference
-    kernel_c = 2*difference
-
-    kernel = np.ones((kernel_r, kernel_c),np.uint8)
-    morpho = cv.dilate(green, kernel)
-    morpho = cv.erode(morpho, kernel)
+    ##########
+    # Specify size on vertical axis
+    # Apply adaptiveThreshold at the bitwise_not of gray, notice the ~ symbol
+    # Transform source image to gray if it is not already
     
+    gray = cv.bitwise_not(green)
+    #bw = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 15, -2)
+   
+    #Show binary image
+    #show_wait_destroy("binary", bw)
+   
+    # Create the images that will use to extract the horizontal and vertical lines
+    horizontal = np.copy(gray)
+    cols = horizontal.shape[1]
+    horizontal_size = cols // 30    
+    horizontalStructure = cv.getStructuringElement(cv.MORPH_RECT, (horizontal_size, 1))
+    horizontal = cv.erode(horizontal, horizontalStructure)
+    horizontal = cv.dilate(horizontal, horizontalStructure)
+    # Show extracted horizontal lines
+    show_wait_destroy("horizontal", horizontal)
+    
+    
+    vertical = np.copy(gray)
+    rows = vertical.shape[0]
+    verticalsize = rows // 30
+    
+    # Create structure element for extracting vertical lines through morphology operations
+    verticalStructure = cv.getStructuringElement(cv.MORPH_RECT, (1, verticalsize))
+    # Apply morphology operations
+    vertical = cv.erode(vertical, verticalStructure)
+    vertical = cv.dilate(vertical, verticalStructure)
+    
+    # Show extracted vertical lines
+    #show_wait_destroy("vertical", vertical)
+
+    # Inverse vertical image
+    vertical = cv.bitwise_not(vertical)
+    show_wait_destroy("vertical_bit", vertical)
     
     for (x,y) in c :
-        if morpho[y,x].any() > 0:
+        if vertical[y,x].any() > 0:
             #morpho[y,x] = (0, 0, 255)
             if "b" in last : red+=1
             last="r"
@@ -152,18 +189,25 @@ def calcule_lines(roi, pnts, difference, scale_value):
             if "r" in last : blue+=1
             last="b"  
     
-    print("SCALE VALUE: " + str(scale_value) + " - BLACK: " + str(blue) + "; WHITE: " + str(red))
+    print("PRE-MORPH " + str(scale_value) + " - WHITE: " + str(red))
+
+   
+    kernel_r = 2*difference
+    kernel_c = 2*difference
+
+    kernel = np.ones((kernel_r, kernel_c),np.uint8)
+    morpho = cv.dilate(green, kernel)
+    morpho = cv.erode(morpho, kernel)
     
-    cv.imshow("RESULTS", morpho)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
+
+    #cv.imshow("RESULTS", morpho)
+    #cv.waitKey(0)
+    #cv.destroyAllWindows()
 
 
 
     return morpho
  
-####---------------------------------------------------------------------------###
-
 ####---------------------------------------------------------------------------###
 
 #path = "/home/vmalarcon/proyectos/PR-00680_HIBA/dataset/Images/20211029_olivar_RGB_mask.tif"
@@ -201,7 +245,7 @@ roi_original = selectROI(original, points_original)
 #cv.waitKey(0)
 
 pnts_line_original = [x*difference_percent for x in pnts_line_escalado]
-morpho_original = calcule_lines(roi_original, pnts_line_original, difference_percent, 100)
+#morpho_original = calcule_lines(roi_original, pnts_line_original, difference_percent, 100)
 
 
 
